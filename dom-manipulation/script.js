@@ -2,11 +2,15 @@ const serverUrl = 'https://jsonplaceholder.typicode.com/posts'; // Simulated ser
 let quotes = []; // The array to store quotes (local + server)
 
 // Fetch quotes from the server and sync with local storage
-async function fetchQuotesFromServer() {
+async function syncQuotes() {
   try {
+    // Fetch local quotes from localStorage
+    loadQuotes(); // Load local quotes from localStorage
+
+    // Fetch quotes from the server
     const response = await fetch(serverUrl);
     const serverQuotes = await response.json();
-    
+
     // Handle conflicts and sync
     resolveConflicts(serverQuotes);
 
@@ -15,8 +19,11 @@ async function fetchQuotesFromServer() {
     saveQuotes();
     populateCategories();
     filterQuotes();
+
+    // Notify user or log when sync is successful
+    notifyUser('Quotes synced with server!');
   } catch (error) {
-    console.error('Error fetching quotes from server:', error);
+    console.error('Error syncing quotes with server:', error);
   }
 }
 
@@ -36,6 +43,7 @@ async function postQuoteToServer(quote) {
     console.error('Error posting quote to server:', error);
   }
 }
+
 // Function to add a new quote
 function addQuote() {
   const newQuoteText = document.getElementById('newQuoteText').value.trim();
@@ -61,6 +69,7 @@ function addQuote() {
   document.getElementById('newQuoteText').value = '';
   document.getElementById('newQuoteCategory').value = '';
 }
+
 // Resolve conflicts between server and local data
 function resolveConflicts(serverQuotes) {
   let conflictResolved = false;
@@ -79,18 +88,20 @@ function resolveConflicts(serverQuotes) {
     saveQuotes();
   }
 }
+
 // Periodic sync with server
 function startDataSync() {
-  setInterval(fetchQuotesFromServer, 600000); // Sync every 10 minutes
+  setInterval(syncQuotes, 600000); // Sync every 10 minutes (600,000 ms)
 }
 
 // Initialize sync and fetch on page load
 window.onload = function() {
-  fetchQuotesFromServer(); // Initial fetch
+  syncQuotes(); // Initial sync
   startDataSync(); // Start periodic syncing
   populateCategories();
   filterQuotes();
 };
+
 // Save quotes to local storage
 function saveQuotes() {
   localStorage.setItem('quotes', JSON.stringify(quotes));
@@ -103,6 +114,7 @@ function loadQuotes() {
     quotes = JSON.parse(storedQuotes);
   }
 }
+
 // Populate categories in the dropdown
 function populateCategories() {
   const categoryFilter = document.getElementById('categoryFilter');
@@ -132,52 +144,17 @@ function filterQuotes() {
     quoteDisplay.appendChild(quoteElement);
   });
 }
-// Function to sync local quotes with server quotes
-async function syncQuotes() {
-  try {
-    // Fetch local quotes from localStorage
-    const localQuotes = JSON.parse(localStorage.getItem('quotes')) || [];
 
-    // Fetch quotes from the server
-    const response = await fetch(serverUrl);
-    const serverQuotes = await response.json();
+// Function to notify the user about successful sync
+function notifyUser(message) {
+  const notificationElement = document.createElement('div');
+  notificationElement.className = 'notification';
+  notificationElement.textContent = message;
+  
+  document.body.appendChild(notificationElement);
 
-    // Resolve conflicts: prioritize server data
-    let hasConflict = false;
-    const mergedQuotes = [...localQuotes]; // Start with local quotes
-
-    serverQuotes.forEach(serverQuote => {
-      const matchingLocalQuote = localQuotes.find(localQuote => localQuote.text === serverQuote.text);
-
-      if (!matchingLocalQuote) {
-        mergedQuotes.push(serverQuote); // Add server quote if it's not found locally
-        hasConflict = true;
-      }
-    });
-
-    // If there was a conflict, notify the user and save merged quotes to localStorage
-    if (hasConflict) {
-      alert('Conflict detected and resolved. Server data was prioritized.');
-      localStorage.setItem('quotes', JSON.stringify(mergedQuotes));
-    }
-
-    // Update the local quotes array
-    quotes = mergedQuotes;
-    populateCategories();
-    filterQuotes();
-  } catch (error) {
-    console.error('Error syncing quotes:', error);
-  }
-}
-// Initialize sync on page load
-window.onload = function() {
-  syncQuotes(); // Initial sync
-  startDataSync(); // Start periodic syncing every 10 minutes
-  populateCategories();
-  filterQuotes();
-};
-
-// Periodic sync with server (every 10 minutes)
-function startDataSync() {
-  setInterval(syncQuotes, 600000); // Sync every 10 minutes (600000 ms)
+  // Remove the notification after a few seconds
+  setTimeout(() => {
+    notificationElement.remove();
+  }, 3000);
 }
