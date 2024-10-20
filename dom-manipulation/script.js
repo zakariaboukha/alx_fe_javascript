@@ -132,3 +132,52 @@ function filterQuotes() {
     quoteDisplay.appendChild(quoteElement);
   });
 }
+// Function to sync local quotes with server quotes
+async function syncQuotes() {
+  try {
+    // Fetch local quotes from localStorage
+    const localQuotes = JSON.parse(localStorage.getItem('quotes')) || [];
+
+    // Fetch quotes from the server
+    const response = await fetch(serverUrl);
+    const serverQuotes = await response.json();
+
+    // Resolve conflicts: prioritize server data
+    let hasConflict = false;
+    const mergedQuotes = [...localQuotes]; // Start with local quotes
+
+    serverQuotes.forEach(serverQuote => {
+      const matchingLocalQuote = localQuotes.find(localQuote => localQuote.text === serverQuote.text);
+
+      if (!matchingLocalQuote) {
+        mergedQuotes.push(serverQuote); // Add server quote if it's not found locally
+        hasConflict = true;
+      }
+    });
+
+    // If there was a conflict, notify the user and save merged quotes to localStorage
+    if (hasConflict) {
+      alert('Conflict detected and resolved. Server data was prioritized.');
+      localStorage.setItem('quotes', JSON.stringify(mergedQuotes));
+    }
+
+    // Update the local quotes array
+    quotes = mergedQuotes;
+    populateCategories();
+    filterQuotes();
+  } catch (error) {
+    console.error('Error syncing quotes:', error);
+  }
+}
+// Initialize sync on page load
+window.onload = function() {
+  syncQuotes(); // Initial sync
+  startDataSync(); // Start periodic syncing every 10 minutes
+  populateCategories();
+  filterQuotes();
+};
+
+// Periodic sync with server (every 10 minutes)
+function startDataSync() {
+  setInterval(syncQuotes, 600000); // Sync every 10 minutes (600000 ms)
+}
