@@ -76,6 +76,19 @@ function addQuote() {
   document.getElementById('newQuoteCategory').value = '';
 }
 
+// Function to show a random quote using Math.random()
+function showRandomQuote() {
+  const randomIndex = Math.floor(Math.random() * quotes.length); // Get a random index
+  const randomQuote = quotes[randomIndex]; // Select a random quote from the array
+
+  const quoteDisplay = document.getElementById('quoteDisplay');
+  quoteDisplay.innerHTML = ''; // Clear the current display
+  
+  const quoteElem = document.createElement('p');
+  quoteElem.textContent = randomQuote.text; // Display the random quote
+  quoteDisplay.appendChild(quoteElem);
+}
+
 // Export quotes to JSON file
 function exportQuotes() {
   const json = JSON.stringify(quotes);
@@ -107,5 +120,6 @@ function importFromJsonFile(event) {
 window.onload = function() {
   populateCategories();
   filterQuotes();
+  document.getElementById('newQuote').addEventListener('click', showRandomQuote); // Event listener for showing random quote
   document.getElementById('exportQuotes').addEventListener('click', exportQuotes);
 };
