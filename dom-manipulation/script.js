@@ -2,15 +2,11 @@ const serverUrl = 'https://jsonplaceholder.typicode.com/posts'; // Simulated ser
 let quotes = []; // The array to store quotes (local + server)
 
 // Fetch quotes from the server and sync with local storage
-async function syncQuotes() {
+async function fetchQuotesFromServer() {
   try {
-    // Fetch local quotes from localStorage
-    loadQuotes(); // Load local quotes from localStorage
-
-    // Fetch quotes from the server
     const response = await fetch(serverUrl);
     const serverQuotes = await response.json();
-
+    
     // Handle conflicts and sync
     resolveConflicts(serverQuotes);
 
@@ -20,7 +16,7 @@ async function syncQuotes() {
     populateCategories();
     filterQuotes();
   } catch (error) {
-    console.error('Error syncing quotes with server:', error);
+    console.error('Error fetching quotes from server:', error);
   }
 }
 
@@ -40,7 +36,6 @@ async function postQuoteToServer(quote) {
     console.error('Error posting quote to server:', error);
   }
 }
-
 // Function to add a new quote
 function addQuote() {
   const newQuoteText = document.getElementById('newQuoteText').value.trim();
@@ -66,7 +61,6 @@ function addQuote() {
   document.getElementById('newQuoteText').value = '';
   document.getElementById('newQuoteCategory').value = '';
 }
-
 // Resolve conflicts between server and local data
 function resolveConflicts(serverQuotes) {
   let conflictResolved = false;
@@ -85,20 +79,18 @@ function resolveConflicts(serverQuotes) {
     saveQuotes();
   }
 }
-
 // Periodic sync with server
 function startDataSync() {
-  setInterval(syncQuotes, 600000); // Sync every 10 minutes (600,000 ms)
+  setInterval(fetchQuotesFromServer, 600000); // Sync every 10 minutes
 }
 
 // Initialize sync and fetch on page load
 window.onload = function() {
-  syncQuotes(); // Initial sync
+  fetchQuotesFromServer(); // Initial fetch
   startDataSync(); // Start periodic syncing
   populateCategories();
   filterQuotes();
 };
-
 // Save quotes to local storage
 function saveQuotes() {
   localStorage.setItem('quotes', JSON.stringify(quotes));
@@ -111,7 +103,6 @@ function loadQuotes() {
     quotes = JSON.parse(storedQuotes);
   }
 }
-
 // Populate categories in the dropdown
 function populateCategories() {
   const categoryFilter = document.getElementById('categoryFilter');
