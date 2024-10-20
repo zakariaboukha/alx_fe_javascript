@@ -181,3 +181,9 @@ window.onload = function() {
 function startDataSync() {
   setInterval(syncQuotes, 600000); // Sync every 10 minutes (600000 ms)
 }
+// Notify user or log when sync is successful
+    notifyUser('Quotes synced with server!');
+  } catch (error) {
+    console.error('Error syncing quotes with server:', error);
+  }
+}
